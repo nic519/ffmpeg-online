@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
   // 实验性功能
   experimental: {
     // 优化包导入
-    optimizePackageImports: ["antd"],
+    optimizePackageImports: ["@heroui/react"],
   },
 
   // 注意：由于 @ffmpeg/ffmpeg 与 Turbopack 不兼容，开发环境使用 webpack

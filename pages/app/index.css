@@ -1,54 +1,19 @@
-.component-spin {
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  z-index: 100;
-  background-color: hsla(0, 0%, 100%, 0.9);
+/* 自定义滚动条样式 */
+.command-sidebar::-webkit-scrollbar {
+  width: 6px;
 }
 
-.command-text {
-  border: 1px solid #eee;
-  padding: 3px 6px;
-  color: #ccc;
+.command-sidebar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.command-sidebar::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
   border-radius: 3px;
 }
 
-.ant-spin-nested-loading > div > .ant-spin {
-  max-height: none !important;
-}
-
-.ant-spin-nested-loading {
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  z-index: 100;
-}
-
-.page-app {
-  width: 500px;
-  padding-top: 20px;
-  margin: 0 auto;
-}
-
-.ant-upload.ant-upload {
-  width: 500px;
-  padding: 10px;
-}
-
-.exec {
-  width: 500px;
-}
-
-.ant-input {
-  margin: 10px 0;
-}
-
-h4 {
-  margin-top: 20px;
+.command-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 .github-corner:hover .octo-arm {
@@ -68,6 +33,26 @@ h4 {
     transform: rotate(10deg);
   }
 }
+@media (max-width: 768px) {
+  .command-sidebar {
+    position: relative;
+    width: 100% !important;
+    height: auto;
+    max-height: 300px;
+    border-right: none;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .page-content {
+    margin-left: 0;
+  }
+
+  .page-app {
+    max-width: 100%;
+    padding: 10px;
+  }
+}
+
 @media (max-width: 500px) {
   .github-corner:hover .octo-arm {
     animation: none;

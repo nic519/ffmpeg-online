@@ -1,11 +1,12 @@
-import "antd/dist/antd.css";
+import "../styles/globals.css";
 import "./app/index.css";
 import Script from "next/script";
 import type { AppProps } from "next/app";
+import { HeroUIProvider } from "@heroui/react";
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <>
+    <HeroUIProvider>
       <Script
         strategy="lazyOnload"
         src={`https://www.googletagmanager.com/gtag/js?id=G-M4JFD2DM29`}
@@ -25,7 +26,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         `}
       </Script>
       <Component {...pageProps} />
-    </>
+    </HeroUIProvider>
   );
 }
 
