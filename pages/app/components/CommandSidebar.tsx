@@ -29,28 +29,22 @@ export const CommandSidebar: React.FC<CommandSidebarProps> = ({
         style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.06)' }}
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
+           
           <div>
             
-            <h2 className="text-white font-bold text-sm">
+            <h1 className=" font-bold">
               <ShinyText
-                text="✨ Shiny Text Effect"
+                text="✨ FFMPEG ONLINE"
                 speed={2}
                 delay={0}
-                color="#b5b5b5"
-                shineColor="#ffffff"
+                color="#ffffff"
+                shineColor="#ffff00"
                 spread={120}
                 direction="left"
                 yoyo={false}
                 pauseOnHover={false}
               />
-            </h2>
-            <p className="text-white/30 text-xs">快速选择预设</p>
+            </h1> 
           </div>
         </div>
       </div>
