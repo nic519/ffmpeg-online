@@ -1,5 +1,4 @@
-import React from "react";
-import { Button } from "@heroui/react";
+import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 
 interface ExecutionSectionProps {
@@ -7,18 +6,43 @@ interface ExecutionSectionProps {
   onExecute: () => void;
   downloadHref?: string;
   downloadFileName?: string;
+  isProcessing?: boolean;
+  processTip?: string | false;
 }
+
+// 将 Spinner 提取到组件外部，避免每次渲染都重新创建
+const Spinner = () => (
+  <div className="inline-block w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+);
 
 export const ExecutionSection: React.FC<ExecutionSectionProps> = ({
   hasFile,
   onExecute,
   downloadHref,
   downloadFileName,
+  isProcessing = false,
+  processTip = false,
 }) => {
+  // 提取百分比进度（如果 tip 是百分比格式）
+  const progressData = useMemo(() => {
+    if (typeof processTip === 'string' && processTip.includes('%')) {
+      // 提取数字百分比值（如 "45.2%" -> 45.2）
+      const match = processTip.match(/(\d+\.?\d*)%/);
+      if (match) {
+        return {
+          text: processTip,
+          value: parseFloat(match[1]),
+        };
+      }
+      return { text: processTip, value: null };
+    }
+    return null;
+  }, [processTip]);
+
   return (
     <div className="h-full">
       <motion.div 
-        className="h-full rounded-2xl p-6 transition-all duration-300"
+        className="h-full rounded-2xl p-6 transition-all duration-300 relative"
         style={{
           background: 'rgba(255, 255, 255, 0.03)',
           border: '1px solid rgba(255, 255, 255, 0.08)',
@@ -41,28 +65,50 @@ export const ExecutionSection: React.FC<ExecutionSectionProps> = ({
             <p className="text-white/40 text-xs">运行 FFmpeg 命令</p>
           </div>
         </div>
-        
+
         <div className="space-y-4">
           <motion.button
             onClick={onExecute}
-            disabled={!hasFile}
-            className={`w-full py-4 px-6 rounded-xl font-semibold text-sm transition-all duration-300 ${
-              hasFile
+            disabled={!hasFile || isProcessing}
+            className={`w-full py-4 px-6 rounded-xl font-semibold text-sm transition-all duration-300 relative overflow-hidden ${
+              hasFile && !isProcessing
                 ? 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-lg hover:shadow-xl hover:shadow-purple-500/25'
                 : 'bg-white/5 text-white/30 cursor-not-allowed'
             }`}
-            whileHover={hasFile ? { scale: 1.02 } : {}}
-            whileTap={hasFile ? { scale: 0.98 } : {}}
+            whileHover={hasFile && !isProcessing ? { scale: 1.02 } : {}}
+            whileTap={hasFile && !isProcessing ? { scale: 0.98 } : {}}
           >
-            <span className="flex items-center justify-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              开始处理
+            {/* 进度条背景 - 使用 CSS transition 而不是 framer-motion，避免打断 Spinner 动画 */}
+            {isProcessing && progressData && progressData.value !== null && (
+              <div
+                className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 transition-all duration-300 ease-out"
+                style={{
+                  width: `${progressData.value}%`,
+                  opacity: 0.3,
+                }}
+              />
+            )}
+            
+            <span className="flex items-center justify-center gap-2 relative z-10">
+              {!isProcessing ? (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  开始处理
+                </>
+              ) : (
+                <>
+                  <Spinner />
+                  <span>
+                    {progressData ? `处理中 ${progressData.text}` : (processTip || '处理中...')}
+                  </span>
+                </>
+              )}
             </span>
           </motion.button>
           
-          {downloadHref && (
+          {downloadHref && !isProcessing && (
             <motion.a
               href={downloadHref}
               download={downloadFileName}

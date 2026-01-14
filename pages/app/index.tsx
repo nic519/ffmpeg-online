@@ -12,7 +12,6 @@ import { useFFmpeg } from "./hooks/useFFmpeg";
 import { useCommandExecution } from "./hooks/useCommandExecution";
 import { useCommandTemplate } from "./hooks/useCommandTemplate";
 import Background from "./components/Background";
-import BlurText from "./components/BlurText";
 
 const App = () => {
   const [file, setFile] = useState<File | undefined>();
@@ -93,8 +92,8 @@ const App = () => {
       {/* 静态背景 */}
       <Background />
       
-      {/* Loading 状态 */}
-      {spinning && (
+      {/* FFmpeg 初始化 Loading 状态（仅在首次加载时显示） */}
+      {spinning && (tip === "ffmpeg static resource loading..." || !file) && (
         <motion.div 
           className="fixed inset-0 z-50 flex items-center justify-center"
           initial={{ opacity: 0 }}
@@ -147,6 +146,8 @@ const App = () => {
                 onExecute={handleExecute}
                 downloadHref={href}
                 downloadFileName={downloadFileName}
+                isProcessing={spinning && tip !== "ffmpeg static resource loading..." && Boolean(file)}
+                processTip={tip !== "ffmpeg static resource loading..." && Boolean(file) ? tip : false}
               />
             </motion.div>
 
