@@ -1,0 +1,41 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
+    "clean": "rm -rf .next out dist node_modules",
+    "clean:lock": "rm -f bun.lockb package-lock.json yarn.lock pnpm-lock.yaml",
+    "analyze": "ANALYZE=true next build"
+  },
+  "dependencies": {
+    "@ffmpeg/core": "^0.11.0",
+    "@ffmpeg/ffmpeg": "^0.11.6",
+    "@vercel/analytics": "^1.6.1",
+    "antd": "^6.2.0",
+    "buffer": "^6.0.3",
+    "file-type": "^17.1.2",
+    "jszip": "^3.10.1",
+    "next": "^16.1.1",
+    "numerify": "^1.2.9",
+    "process": "^0.11.10",
+    "query-string": "^8.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "readable-stream": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@types/webpack": "^5.28.0",
+    "eslint": "^9.39.0",
+    "eslint-config-next": "^16.1.1",
+    "prettier": "^3.7.4",
+    "typescript": "^5.5.0"
+  }
+}
