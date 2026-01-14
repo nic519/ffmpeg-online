@@ -5,9 +5,6 @@ const nextConfig: NextConfig = {
   // React 严格模式
   reactStrictMode: true,
 
-  // 性能优化：启用 SWC 压缩
-  swcMinify: true,
-
   // 压缩配置
   compress: true,
 

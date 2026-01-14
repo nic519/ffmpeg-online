@@ -31,6 +31,7 @@ const App = () => {
   const [downloadFileName, setDownloadFileName] = useState("output.mp4");
   const ffmpeg = useRef<FFmpeg | null>(null);
   const currentFSls = useRef<string[]>([]);
+ 
 
   const handleExec = async () => {
     if (!file || !ffmpeg.current) {
@@ -67,11 +68,12 @@ const App = () => {
       );
       if (outputFiles.length === 1) {
         const data = ffmpeg.current.FS("readFile", outputFiles[0]);
-        const type = await fileTypeFromBuffer(data.buffer);
+        const buffer = data.buffer instanceof ArrayBuffer ? data.buffer : new Uint8Array(data).buffer;
+        const type = await fileTypeFromBuffer(buffer);
 
         if (type) {
           const objectURL = URL.createObjectURL(
-            new Blob([data.buffer], { type: type.mime })
+            new Blob([buffer], { type: type.mime })
           );
           setHref(objectURL);
           setDownloadFileName(outputFiles[0]);
@@ -102,6 +104,8 @@ const App = () => {
       }
     } catch (err) {
       console.error(err);
+      setSpinning(false);
+      setTip(false);
       message.error(
         "Failed to run, please check if the command is correct or open the console to view the error details",
         10
@@ -121,11 +125,12 @@ const App = () => {
     for (let filename of filenames) {
       try {
         const data = ffmpeg.current.FS("readFile", filename);
-        const type = await fileTypeFromBuffer(data.buffer);
+        const buffer = data.buffer instanceof ArrayBuffer ? data.buffer : new Uint8Array(data).buffer;
+        const type = await fileTypeFromBuffer(buffer);
 
         if (type) {
           const objectURL = URL.createObjectURL(
-            new Blob([data.buffer], { type: type.mime })
+            new Blob([buffer], { type: type.mime })
           );
           outputFilesData.push({
             name: filename,
@@ -142,19 +147,26 @@ const App = () => {
 
   useEffect(() => {
     (async () => {
-      ffmpeg.current = createFFmpeg({
-        log: true,
-        corePath:
-          "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js",
-      });
-      ffmpeg.current.setProgress(({ ratio }) => {
-        console.log(ratio);
-        setTip(numerify(ratio, "0.0%"));
-      });
-      setTip("ffmpeg static resource loading...");
-      setSpinning(true);
-      await ffmpeg.current.load();
-      setSpinning(false);
+      try {
+        ffmpeg.current = createFFmpeg({
+          log: true,
+          corePath:
+            "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js",
+        });
+        ffmpeg.current.setProgress(({ ratio }) => {
+          console.log(ratio);
+          setTip(numerify(ratio, "0.0%"));
+        });
+        setTip("ffmpeg static resource loading...");
+        setSpinning(true);
+        await ffmpeg.current.load();
+        setSpinning(false);
+      } catch (err) {
+        console.error("Failed to load ffmpeg:", err);
+        setSpinning(false);
+        setTip(false);
+        message.error("Failed to load ffmpeg, please refresh the page and try again", 10);
+      }
     })();
   }, []);
 
@@ -200,7 +212,7 @@ const App = () => {
         </Spin>
       )}
 
-      <h2 align="center">ffmpeg-online</h2>
+      <h2 style={{ textAlign: "center" }}>ffmpeg-online</h2>
 
       <h4>1. Select file</h4>
       <p style={{ color: "gray" }}>
