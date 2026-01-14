@@ -26,6 +26,25 @@ export const useCommandTemplate = (fileList: File[]) => {
     setCommandGroups(grouped);
   }, []);
 
+  // 当文件列表变化时，自动更新输出文件名
+  useEffect(() => {
+    if (fileList.length > 0 && selectedTemplate) {
+      const requiredFileCount = selectedTemplate.inputFileCount || 1;
+      if (fileList.length >= requiredFileCount) {
+        try {
+          const command = buildFFmpegCommand(selectedTemplate, fileList);
+          setCommandState((prev) => ({
+            ...prev,
+            inputFileName: requiredFileCount > 1 ? command.inputFiles.join(" ") : command.inputFiles[0],
+            outputFileName: command.outputFileName,
+          }));
+        } catch (error) {
+          console.warn("Failed to update output filename:", error);
+        }
+      }
+    }
+  }, [fileList, selectedTemplate]);
+
   // 选择命令模板
   const handleSelectTemplate = (template: FFmpegCommandTemplate) => {
     setSelectedTemplate(template);

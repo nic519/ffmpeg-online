@@ -37,6 +37,21 @@ export const useCommandExecution = (ffmpeg: FFmpeg | null) => {
       setTip("Loading file into browser");
       setSpinning(true);
 
+      // 清理上一次生成的输出文件
+      if (currentFSls.current.length > 0) {
+        const currentFiles = ffmpeg.FS("readdir", ".") as string[];
+        const oldOutputFiles = currentFiles.filter(
+          (file) => !currentFSls.current.includes(file) && file !== "." && file !== ".."
+        );
+        oldOutputFiles.forEach((file) => {
+          try {
+            ffmpeg.FS("unlink", file);
+          } catch (err) {
+            console.warn(`Failed to delete old file: ${file}`, err);
+          }
+        });
+      }
+
       // 写入所有文件到文件系统
       for (const fileItem of fileList) {
         const fileName = fileItem.name;

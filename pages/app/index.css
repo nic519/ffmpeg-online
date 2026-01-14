@@ -1,24 +1,26 @@
-/* 自定义滚动条样式 */
+/* 命令侧边栏滚动条 */
 .command-sidebar::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .command-sidebar::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
 }
 
 .command-sidebar::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
 }
 
 .command-sidebar::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: rgba(255, 255, 255, 0.15);
 }
 
+/* GitHub 角标 */
 .github-corner:hover .octo-arm {
   animation: octocat-wave 560ms ease-in-out;
 }
+
 @keyframes octocat-wave {
   0%,
   100% {
@@ -33,6 +35,7 @@
     transform: rotate(10deg);
   }
 }
+
 @media (max-width: 768px) {
   .command-sidebar {
     position: relative;
@@ -40,7 +43,7 @@
     height: auto;
     max-height: 300px;
     border-right: none;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .page-content {
