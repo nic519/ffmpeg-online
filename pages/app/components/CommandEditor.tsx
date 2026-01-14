@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
+import { toast } from "../../../utils/toast";
 
 interface CommandEditorProps {
   inputOptions: string;
@@ -56,6 +57,65 @@ export const CommandEditor: React.FC<CommandEditorProps> = ({
   onOutputOptionsChange,
   onOutputFileNameChange,
 }) => {
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  // 构建完整的 ffmpeg 命令
+  const buildCommand = useCallback(() => {
+    const parts = [
+      'ffmpeg',
+      inputOptions,
+      inputFileName,
+      outputOptions,
+      outputFileName,
+    ].filter(Boolean);
+    return parts.join(' ');
+  }, [inputOptions, inputFileName, outputOptions, outputFileName]);
+
+  // 复制命令到剪贴板
+  const copyCommand = useCallback(async () => {
+    const command = buildCommand();
+    try {
+      await navigator.clipboard.writeText(command);
+      toast.success('命令已复制到剪贴板');
+    } catch {
+      toast.error('复制失败，请重试');
+    }
+  }, [buildCommand]);
+
+  // 监听键盘快捷键
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 检查是否按下了 Ctrl+C (Windows/Linux) 或 Cmd+C (Mac)
+      const isCopyShortcut = (e.ctrlKey || e.metaKey) && e.key === 'c';
+      
+      if (isCopyShortcut) {
+        // 检查焦点是否在命令预览区域或其内部
+        const activeElement = document.activeElement;
+        const previewElement = previewRef.current;
+        
+        if (previewElement && (
+          previewElement.contains(activeElement) || 
+          previewElement === activeElement ||
+          // 如果焦点不在任何输入框中，也允许复制
+          (activeElement && activeElement.tagName !== 'INPUT' && activeElement.tagName !== 'TEXTAREA')
+        )) {
+          // 如果焦点在输入框中，不拦截（让浏览器默认行为处理）
+          if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+            return;
+          }
+          
+          e.preventDefault();
+          copyCommand();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [copyCommand]);
+
   return (
     <motion.div 
       className="rounded-2xl p-6 transition-all duration-300"
@@ -114,21 +174,41 @@ export const CommandEditor: React.FC<CommandEditorProps> = ({
       
       {/* 命令预览 */}
       <div 
-        className="rounded-xl p-4 font-mono text-sm overflow-x-auto"
+        ref={previewRef}
+        className="rounded-xl p-4 font-mono text-sm overflow-x-auto cursor-pointer group"
         style={{
           background: 'rgba(0, 0, 0, 0.3)',
           border: '1px solid rgba(255, 255, 255, 0.05)',
         }}
+        onClick={copyCommand}
+        title="点击复制或按 Ctrl+C (Mac: Cmd+C)"
       >
-        <div className="flex items-center gap-2 mb-2">
-          <div className="flex gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-red-500/60" />
-            <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-            <div className="w-3 h-3 rounded-full bg-green-500/60" />
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-red-500/60" />
+              <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
+              <div className="w-3 h-3 rounded-full bg-green-500/60" />
+            </div>
+            <span className="text-white/30 text-xs">命令预览</span>
           </div>
-          <span className="text-white/30 text-xs">命令预览</span>
+          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                copyCommand();
+              }}
+              className="text-white/40 hover:text-white/80 text-xs px-2 py-1 rounded hover:bg-white/5 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              复制
+            </button>
+            <span className="text-white/20 text-xs">Ctrl+C</span>
+          </div>
         </div>
-        <code className="text-white/80 break-all leading-relaxed">
+        <code className="text-white/80 break-all leading-relaxed select-all">
           <span className="text-cyan-400">ffmpeg</span>{" "}
           <span className="text-purple-400">{inputOptions}</span>{" "}
           <span className="text-blue-400">{inputFileName}</span>{" "}
