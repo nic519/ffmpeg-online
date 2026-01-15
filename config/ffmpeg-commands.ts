@@ -13,7 +13,7 @@ export const FFMPEG_COMMAND_TEMPLATES: FFmpegCommandTemplate[] = [
   {
     id: 'convert-to-mp3',
     description: '将音频或视频转换为 MP3 格式。默认 320kbps，如需修改码率，将 -b:a 320k 改为 -b:a 128k 等',
-    category: '音频转换',
+    category: '音频-转换',
     outputOptions: '-codec:a libmp3lame -b:a 320k',
     outputExtension: '.mp3',
   },
@@ -48,7 +48,7 @@ export const FFMPEG_COMMAND_TEMPLATES: FFmpegCommandTemplate[] = [
     category: '字幕处理',
     inputFileCount: 2,
     outputOptions: '-c:v copy -c:a copy -c:s mov_text',
-    outputExtension: '.mp4',
+    outputExtension: '-sub.mp4',
   },
   {
     id: 'merge-subtitle-ass',
@@ -56,7 +56,7 @@ export const FFMPEG_COMMAND_TEMPLATES: FFmpegCommandTemplate[] = [
     category: '字幕处理',
     inputFileCount: 2,
     outputOptions: '-c:v copy -c:a copy -c:s ass',
-    outputExtension: '.mp4',
+    outputExtension: '-sub.mp4',
   },
   {
     id: 'burn-subtitle',

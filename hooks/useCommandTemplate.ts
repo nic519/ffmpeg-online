@@ -35,7 +35,8 @@ export const useCommandTemplate = (fileList: File[]) => {
           const command = buildFFmpegCommand(selectedTemplate, fileList);
           setCommandState((prev) => ({
             ...prev,
-            inputFileName: requiredFileCount > 1 ? command.inputFiles.join(" ") : command.inputFiles[0],
+            inputFileName:
+              requiredFileCount > 1 ? command.inputFiles.join(" ") : command.inputFiles[0],
             outputFileName: command.outputFileName,
           }));
         } catch (error) {
@@ -56,7 +57,8 @@ export const useCommandTemplate = (fileList: File[]) => {
         const command = buildFFmpegCommand(template, fileList);
         setCommandState({
           inputOptions: command.inputOptions,
-          inputFileName: requiredFileCount > 1 ? command.inputFiles.join(" ") : command.inputFiles[0],
+          inputFileName:
+            requiredFileCount > 1 ? command.inputFiles.join(" ") : command.inputFiles[0],
           outputOptions: command.outputOptions,
           outputFileName: command.outputFileName,
         });

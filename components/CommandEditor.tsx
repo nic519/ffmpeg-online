@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { toast } from "@/utils/toast";
+import { buildFFmpegArgs } from "@/utils/ffmpeg-command";
 
 interface CommandEditorProps {
   inputOptions: string;
@@ -61,14 +62,13 @@ export const CommandEditor: React.FC<CommandEditorProps> = ({
 
   // 构建完整的 ffmpeg 命令
   const buildCommand = useCallback(() => {
-    const parts = [
-      'ffmpeg',
+    const args = buildFFmpegArgs(
       inputOptions,
       inputFileName,
       outputOptions,
-      outputFileName,
-    ].filter(Boolean);
-    return parts.join(' ');
+      outputFileName
+    );
+    return ['ffmpeg', ...args].join(' ');
   }, [inputOptions, inputFileName, outputOptions, outputFileName]);
 
   // 复制命令到剪贴板
@@ -209,11 +209,7 @@ export const CommandEditor: React.FC<CommandEditorProps> = ({
           </div>
         </div>
         <code className="text-white/80 break-all leading-relaxed select-all">
-          <span className="text-cyan-400">ffmpeg</span>{" "}
-          <span className="text-purple-400">{inputOptions}</span>{" "}
-          <span className="text-blue-400">{inputFileName}</span>{" "}
-          <span className="text-purple-400">{outputOptions}</span>{" "}
-          <span className="text-emerald-400">{outputFileName}</span>
+          {buildCommand()}
         </code>
       </div>
     </motion.div>

@@ -64,14 +64,14 @@ export const CommandProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // 当文件列表变化时，更新输入文件名
   useEffect(() => {
-    if (fileList.length > 0) {
+    if (!selectedTemplate && fileList.length > 0) {
       setCommandState((prev) => ({
         ...prev,
         inputFileName:
           fileList.length === 1 ? fileList[0].name : fileList.map((f) => f.name).join(' '),
       }));
     }
-  }, [fileList]);
+  }, [fileList, selectedTemplate]);
 
   const handleSelectTemplate = (template: FFmpegCommandTemplate) => {
     setSelectedTemplate(template);

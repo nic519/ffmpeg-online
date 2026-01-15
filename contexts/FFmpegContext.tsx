@@ -17,6 +17,7 @@ export const FFmpegProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [spinning, setSpinning] = useState(false);
   const [tip, setTip] = useState<string | false>(false);
   const ffmpeg = useRef<FFmpeg | null>(null);
+  const lastRatioRef = useRef<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -27,9 +28,17 @@ export const FFmpegProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
         });
         ffmpeg.current.setProgress(({ ratio }) => {
-          // eslint-disable-next-line no-console
-          console.log(ratio);
-          setTip(numerify(ratio, '0.0%'));
+          if (typeof ratio !== 'number' || !Number.isFinite(ratio) || ratio < 0) {
+            if (lastRatioRef.current !== null) {
+              setTip(numerify(lastRatioRef.current, '0.0%'));
+            } else {
+              setTip('处理中...');
+            }
+            return;
+          }
+          const safeRatio = Math.max(0, Math.min(1, ratio));
+          lastRatioRef.current = safeRatio;
+          setTip(numerify(safeRatio, '0.0%'));
         });
         setTip('ffmpeg static resource loading...');
         setSpinning(true);

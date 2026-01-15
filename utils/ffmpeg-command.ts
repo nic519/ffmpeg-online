@@ -1,5 +1,51 @@
 import { FFmpegCommandTemplate } from '@/config/ffmpeg-commands';
 
+export function buildFFmpegArgs(
+  inputOptions: string,
+  inputFileName: string,
+  outputOptions: string,
+  outputFileName: string
+): string[] {
+  const args: string[] = [];
+
+  const inputParts = (inputOptions || '').split(/\s+/).filter((s) => s);
+  let hasInputFiles = false;
+
+  for (let i = 0; i < inputParts.length; i++) {
+    const part = inputParts[i];
+    if (part === '-i' && i + 1 < inputParts.length && !inputParts[i + 1].startsWith('-')) {
+      hasInputFiles = true;
+      break;
+    }
+  }
+
+  if (hasInputFiles) {
+    args.push(...inputParts);
+  } else {
+    args.push(...inputParts);
+    const fileNames = (inputFileName || '').split(/\s+/).filter((s) => s);
+    const containsBareI = inputParts.includes('-i');
+
+    fileNames.forEach((fileName, index) => {
+      if (index === 0 && containsBareI) {
+        args.push(fileName);
+      } else {
+        args.push('-i', fileName);
+      }
+    });
+  }
+
+  if (outputOptions) {
+    args.push(...outputOptions.split(/\s+/).filter((s) => s));
+  }
+
+  if (outputFileName) {
+    args.push(outputFileName);
+  }
+
+  return args;
+}
+
 /**
  * 根据文件扩展名判断文件类型
  */
@@ -36,27 +82,21 @@ export function buildFFmpegCommand(
     throw new Error(`需要 ${inputFileCount} 个文件，但只提供了 ${files.length} 个`);
   }
 
-  // 生成输入文件名数组
   const inputFiles = files.slice(0, inputFileCount).map((f) => f.name);
 
-  // 处理输入选项
   let inputOptions = template.inputOptions;
   if (!inputOptions) {
-    // 默认情况下，只返回 "-i" 选项，文件名单独处理
-    inputOptions = "-i";
+    inputOptions = '-i';
   } else {
-    // 替换占位符
     inputFiles.forEach((fileName, index) => {
       inputOptions = inputOptions!.replace(`{file${index + 1}}`, fileName);
     });
 
-    // 如果还有占位符，说明模板格式不对
     if (inputOptions.includes('{file')) {
       throw new Error('输入选项模板格式错误，存在未替换的占位符');
     }
   }
 
-  // 生成输出文件名
   const baseName = files[0].name.replace(/\.[^/.]+$/, '');
   const outputFileName = `${baseName}${template.outputExtension}`;
 

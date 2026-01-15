@@ -113,7 +113,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileChange }) => {
                 拖放文件或点击上传
               </p>
               <p className="text-white/30 text-xs">
-                支持多文件
+                支持多文件，单个文件建议小于 300MB
               </p>
             </div>
           )}

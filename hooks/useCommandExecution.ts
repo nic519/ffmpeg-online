@@ -1,9 +1,12 @@
 import { useState, useRef } from "react";
 import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile } from "@ffmpeg/ffmpeg";
 import { fileTypeFromBuffer } from "file-type";
 import JSZip from "jszip";
 import { toast } from "@/utils/toast";
+import { buildFFmpegArgs } from "@/utils/ffmpeg-command";
+
+const MAX_SINGLE_FILE_BYTES = 600 * 1024 * 1024;
+const MAX_TOTAL_BYTES = 600 * 1024 * 1024;
 
 interface OutputFile {
   name: string;
@@ -34,6 +37,21 @@ export const useCommandExecution = (ffmpeg: FFmpeg | null) => {
     setDownloadFileName("");
 
     try {
+      const totalSize = fileList.reduce((sum, file) => sum + file.size, 0);
+      const tooLargeFile = fileList.find((file) => file.size > MAX_SINGLE_FILE_BYTES);
+
+      if (tooLargeFile || totalSize > MAX_TOTAL_BYTES) {
+         
+        const sizeMB = ((tooLargeFile ? tooLargeFile.size : totalSize) / (1024 * 1024)).toFixed(1);
+        toast.error(
+          `当前文件约 ${sizeMB} MB。\n\n请在本地终端运行命令`,
+          { duration: 20000 }
+        );
+        setSpinning(false);
+        setTip(false);
+        return;
+      }
+
       setTip("Loading file into browser");
       setSpinning(true);
 
@@ -54,54 +72,25 @@ export const useCommandExecution = (ffmpeg: FFmpeg | null) => {
 
       // 写入所有文件到文件系统
       for (const fileItem of fileList) {
-        const fileName = fileItem.name;
-        ffmpeg.FS("writeFile", fileName, await fetchFile(fileItem));
+        try {
+          const fileName = fileItem.name;
+          const buffer = await fileItem.arrayBuffer();
+          ffmpeg.FS("writeFile", fileName, new Uint8Array(buffer));
+        } catch (e) {
+          console.error("写入输入文件失败:", fileItem.name, e);
+          throw e;
+        }
       }
 
       currentFSls.current = ffmpeg.FS("readdir", ".") as string[];
       setTip("start executing the command");
 
-      // 构建命令参数数组
-      const commandArgs: string[] = [];
-
-      // 处理输入选项
-      const inputParts = inputOptions.split(/\s+/).filter((s) => s);
-      let hasInputFiles = false;
-
-      // 检查 inputOptions 中是否已经包含文件名
-      for (let i = 0; i < inputParts.length; i++) {
-        const part = inputParts[i];
-        if (
-          part === "-i" &&
-          i + 1 < inputParts.length &&
-          !inputParts[i + 1].startsWith("-")
-        ) {
-          hasInputFiles = true;
-          break;
-        }
-      }
-
-      if (hasInputFiles) {
-        // inputOptions 已经包含完整的输入参数（包括文件名）
-        commandArgs.push(...inputParts);
-      } else {
-        // 传统单文件格式：inputOptions + name
-        commandArgs.push(...inputParts);
-        if (inputParts.length === 0 || !inputParts.includes("-i")) {
-          commandArgs.push("-i");
-        }
-        // 处理多个文件名（用空格分隔）
-        const fileNames = inputFileName.split(/\s+/).filter((s) => s);
-        commandArgs.push(...fileNames);
-      }
-
-      // 添加输出选项
-      if (outputOptions) {
-        commandArgs.push(...outputOptions.split(/\s+/).filter((s) => s));
-      }
-
-      // 添加输出文件名
-      commandArgs.push(outputFileName);
+      const commandArgs = buildFFmpegArgs(
+        inputOptions,
+        inputFileName,
+        outputOptions,
+        outputFileName
+      );
 
       // eslint-disable-next-line no-console
       console.log("执行命令: ffmpeg", commandArgs.join(" "));
@@ -154,7 +143,13 @@ export const useCommandExecution = (ffmpeg: FFmpeg | null) => {
         );
       }
     } catch (err) {
-      console.error(err);
+      console.error("执行 ffmpeg 命令失败", {
+        error: err,
+        inputOptions,
+        inputFileName,
+        outputOptions,
+        outputFileName,
+      });
       setSpinning(false);
       setTip(false);
       toast.error(
