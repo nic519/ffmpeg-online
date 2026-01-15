@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import qs from "query-string";
 import { Spinner } from "@heroui/react";
@@ -8,44 +8,40 @@ import { FileUpload } from "../../components/FileUpload";
 import { CommandEditor } from "../../components/CommandEditor";
 import { ExecutionSection } from "../../components/ExecutionSection";
 import { OutputFilesSection } from "../../components/OutputFilesSection";
-import { useFFmpeg } from "../../hooks/useFFmpeg";
+import { useFFmpegContext } from "@/contexts/FFmpegContext";
+import { useCommandContext } from "@/contexts/CommandContext";
 import { useCommandExecution } from "../../hooks/useCommandExecution";
-import { useCommandTemplate } from "../../hooks/useCommandTemplate";
 import Background from "../../components/Background";
 
 const App = () => {
-  const [file, setFile] = useState<File | undefined>();
-  const [fileList, setFileList] = useState<File[]>([]);
+  // 从 Context 获取 FFmpeg 状态
+  const { ffmpeg, spinning, tip, setSpinning, setTip } = useFFmpegContext();
 
-  // FFmpeg 初始化
-  const { ffmpeg, spinning, tip, setSpinning, setTip } = useFFmpeg();
-
-  // 命令模板管理
+  // 从 Context 获取命令状态
   const {
     selectedTemplate,
     commandGroups,
     commandState,
+    fileList,
+    currentFile,
     handleSelectTemplate,
     updateCommandState,
-  } = useCommandTemplate(fileList);
+    setFileList,
+    setCurrentFile,
+  } = useCommandContext();
 
   // 命令执行
   const { href, downloadFileName, executeCommand } = useCommandExecution(ffmpeg);
 
   // 文件上传处理
   const handleFileChange = (file: File, fileList: File[]) => {
-    setFile(file);
+    setCurrentFile(file);
     setFileList(fileList);
-    if (fileList.length > 0) {
-      updateCommandState({
-        inputFileName: fileList.length === 1 ? file.name : fileList.map(f => f.name).join(' '),
-      });
-    }
   };
 
   // 执行命令
   const handleExecute = () => {
-    if (!file || !ffmpeg) {
+    if (!currentFile || !ffmpeg) {
       return;
     }
     executeCommand(
@@ -93,7 +89,7 @@ const App = () => {
       <Background />
       
       {/* FFmpeg 初始化 Loading 状态（仅在首次加载时显示） */}
-      {spinning && (tip === "ffmpeg static resource loading..." || !file) && (
+      {spinning && (tip === "ffmpeg static resource loading..." || !currentFile) && (
         <motion.div 
           className="fixed inset-0 z-50 flex items-center justify-center"
           initial={{ opacity: 0 }}
@@ -142,12 +138,12 @@ const App = () => {
             >
               <FileUpload onFileChange={handleFileChange} />
               <ExecutionSection
-                hasFile={Boolean(file)}
+                hasFile={Boolean(currentFile)}
                 onExecute={handleExecute}
                 downloadHref={href}
                 downloadFileName={downloadFileName}
-                isProcessing={spinning && tip !== "ffmpeg static resource loading..." && Boolean(file)}
-                processTip={tip !== "ffmpeg static resource loading..." && Boolean(file) ? tip : false}
+                isProcessing={spinning && tip !== "ffmpeg static resource loading..." && Boolean(currentFile)}
+                processTip={tip !== "ffmpeg static resource loading..." && Boolean(currentFile) ? tip : false}
               />
             </motion.div>
 
@@ -183,7 +179,7 @@ const App = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <OutputFilesSection ffmpeg={ffmpeg} hasFile={Boolean(file)} />
+              <OutputFilesSection ffmpeg={ffmpeg} hasFile={Boolean(currentFile)} />
             </motion.div>
           </div>
 
