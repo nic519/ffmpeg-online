@@ -3,15 +3,15 @@ import { Analytics } from "@vercel/analytics/react";
 import qs from "query-string";
 import { Spinner } from "@heroui/react";
 import { motion } from "framer-motion";
-import { CommandSidebar } from "./components/CommandSidebar";
-import { FileUpload } from "./components/FileUpload";
-import { CommandEditor } from "./components/CommandEditor";
-import { ExecutionSection } from "./components/ExecutionSection";
-import { OutputFilesSection } from "./components/OutputFilesSection";
-import { useFFmpeg } from "./hooks/useFFmpeg";
-import { useCommandExecution } from "./hooks/useCommandExecution";
-import { useCommandTemplate } from "./hooks/useCommandTemplate";
-import Background from "./components/Background";
+import { CommandSidebar } from "../../components/CommandSidebar";
+import { FileUpload } from "../../components/FileUpload";
+import { CommandEditor } from "../../components/CommandEditor";
+import { ExecutionSection } from "../../components/ExecutionSection";
+import { OutputFilesSection } from "../../components/OutputFilesSection";
+import { useFFmpeg } from "../../hooks/useFFmpeg";
+import { useCommandExecution } from "../../hooks/useCommandExecution";
+import { useCommandTemplate } from "../../hooks/useCommandTemplate";
+import Background from "../../components/Background";
 
 const App = () => {
   const [file, setFile] = useState<File | undefined>();

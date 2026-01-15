@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { toast } from "../../../utils/toast";
+import { toast } from "@/utils/toast";
 
 interface CommandEditorProps {
   inputOptions: string;
