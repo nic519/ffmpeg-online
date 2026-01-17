@@ -19,11 +19,11 @@ export const FFMPEG_COMMAND_TEMPLATES: FFmpegCommandTemplate[] = [
   },
   {
     id: 'extract-audio',
-    description: '从视频中提取音频（保持原始格式）',
-    category: '音频转换',
+    description: '从视频中提取音频（保持原始音频编码，不重新压缩，默认封装为 M4A。若源音频为 MP3，建议使用下方“从视频中提取 MP3 音频（不转码）”模板或手动将输出文件名后缀改为 .mp3）',
+    category: '视频-音频提取',
     outputOptions: '-vn -acodec copy',
     outputExtension: '.m4a',
-  },
+  }, 
 
   // 视频转换类
   {
@@ -45,7 +45,7 @@ export const FFMPEG_COMMAND_TEMPLATES: FFmpegCommandTemplate[] = [
   {
     id: 'merge-subtitle-srt',
     description: '将 SRT 字幕文件合并到视频中。第一个文件为视频，第二个文件为 SRT 字幕',
-    category: '字幕处理',
+    category: '字幕-合并',
     inputFileCount: 2,
     outputOptions: '-c:v copy -c:a copy -c:s mov_text',
     outputExtension: '-sub.mp4',
@@ -53,36 +53,19 @@ export const FFMPEG_COMMAND_TEMPLATES: FFmpegCommandTemplate[] = [
   {
     id: 'merge-subtitle-ass',
     description: '将 ASS 字幕文件合并到视频中。第一个文件为视频，第二个文件为 ASS 字幕',
-    category: '字幕处理',
+    category: '字幕-合并',
     inputFileCount: 2,
     outputOptions: '-c:v copy -c:a copy -c:s ass',
     outputExtension: '-sub.mp4',
-  },
-  {
-    id: 'burn-subtitle',
-    description: '将字幕烧录到视频画面中（硬字幕）。第一个文件为视频，第二个文件为字幕文件。字幕将永久嵌入到视频画面中',
-    category: '字幕处理',
-    inputFileCount: 2,
-    inputOptions: '-i {file1} -vf subtitles={file2}',
-    outputOptions: '-c:a copy',
-    outputExtension: '.mp4',
-  },
+  }, 
 
   // 视频处理类
   {
     id: 'concat-videos',
     description: '合并多个视频文件。将两个视频文件首尾连接',
-    category: '视频处理',
+    category: '视频-合并',
     inputFileCount: 2,
     outputOptions: '-filter_complex "[0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1[outv][outa]" -map "[outv]" -map "[outa]"',
     outputExtension: '.mp4',
-  },
-  {
-    id: 'extract-frame',
-    description: '从视频中提取指定时间的帧。默认提取第1秒的帧，可修改 -ss 参数调整时间点',
-    category: '视频处理',
-    inputOptions: '-ss 00:00:01 -i',
-    outputOptions: '-vframes 1 -q:v 2',
-    outputExtension: '.jpg',
-  },
+  }, 
 ];

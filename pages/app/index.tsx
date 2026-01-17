@@ -174,13 +174,13 @@ const App = () => {
             </motion.div>
 
             {/* 第三行：输出文件 */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
               <OutputFilesSection ffmpeg={ffmpeg} hasFile={Boolean(currentFile)} />
-            </motion.div>
+            </motion.div> */}
           </div>
 
           <Analytics />
