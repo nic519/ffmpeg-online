@@ -27,8 +27,8 @@ export const FFMPEG_COMMAND_TEMPLATES: FFmpegCommandTemplate[] = [
 
   // 视频转换类
   {
-    id: 'convert-to-mp4',
-    description: '将视频转换为 MP4 格式。.ts 内部的视频、音频编码本身要是 MP4 支持的（常见的 H.264 + AAC 一般没问题）。',
+    id: 'lossless-to-mp4',
+    description: '将视频无损转换为 MP4 格式（仅更换封装，不重新编码）。适用于 TS、MKV、FLV、MOV 等封装，只要内部的视频、音频编码本身已是 MP4 支持的（常见的 H.264 + AAC 一般没问题）。',
     category: 'VIDEO',
     outputOptions: '-c copy',
     outputExtension: '.mp4',
