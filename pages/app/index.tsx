@@ -153,17 +153,9 @@ const App = () => {
               transition={{ duration: 0.6, delay: 0.3 }}
             >
               <CommandEditor
-                inputOptions={commandState.inputOptions}
-                inputFileName={commandState.inputFileName}
-                outputOptions={commandState.outputOptions}
-                outputFileName={commandState.outputFileName}
+                command={commandState}
                 description={selectedTemplate?.description}
-                onOutputOptionsChange={(value) =>
-                  updateCommandState({ outputOptions: value })
-                }
-                onOutputFileNameChange={(value) =>
-                  updateCommandState({ outputFileName: value })
-                }
+                onCommandChange={(updates) => updateCommandState(updates)}
               />
             </motion.div>
 

@@ -52,7 +52,7 @@ export const CommandProvider: React.FC<{ children: ReactNode }> = ({ children })
           setCommandState((prev) => ({
             ...prev,
             inputFileName:
-              requiredFileCount > 1 ? command.inputFiles.join(' ') : command.inputFiles[0],
+              requiredFileCount > 1 ? command.inputFiles.join('|') : command.inputFiles[0],
             outputFileName: command.outputFileName,
           }));
         } catch (error) {
@@ -68,7 +68,7 @@ export const CommandProvider: React.FC<{ children: ReactNode }> = ({ children })
       setCommandState((prev) => ({
         ...prev,
         inputFileName:
-          fileList.length === 1 ? fileList[0].name : fileList.map((f) => f.name).join(' '),
+          fileList.length === 1 ? fileList[0].name : fileList.map((f) => f.name).join('|'),
       }));
     }
   }, [fileList, selectedTemplate]);
@@ -83,7 +83,7 @@ export const CommandProvider: React.FC<{ children: ReactNode }> = ({ children })
         setCommandState({
           inputOptions: command.inputOptions,
           inputFileName:
-            requiredFileCount > 1 ? command.inputFiles.join(' ') : command.inputFiles[0],
+            requiredFileCount > 1 ? command.inputFiles.join('|') : command.inputFiles[0],
           outputOptions: command.outputOptions,
           outputFileName: command.outputFileName,
         });

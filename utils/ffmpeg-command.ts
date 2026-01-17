@@ -8,7 +8,12 @@ export function buildFFmpegArgs(
 ): string[] {
   const args: string[] = [];
 
-  const inputParts = (inputOptions || '').split(/\s+/).filter((s) => s);
+  const normalizedInputOptions = (inputOptions || '').trim();
+  const normalizedInputFileName = (inputFileName || '').trim();
+  const normalizedOutputOptions = (outputOptions || '').trim();
+  const normalizedOutputFileName = (outputFileName || '').trim();
+
+  const inputParts = normalizedInputOptions.split(/\s+/).filter((s) => s);
   let hasInputFiles = false;
 
   for (let i = 0; i < inputParts.length; i++) {
@@ -23,7 +28,11 @@ export function buildFFmpegArgs(
     args.push(...inputParts);
   } else {
     args.push(...inputParts);
-    const fileNames = (inputFileName || '').split(/\s+/).filter((s) => s);
+
+    const fileNames = normalizedInputFileName
+      ? normalizedInputFileName.split('|').map((name) => name.trim()).filter((s) => s)
+      : [];
+
     const containsBareI = inputParts.includes('-i');
 
     fileNames.forEach((fileName, index) => {
@@ -35,12 +44,12 @@ export function buildFFmpegArgs(
     });
   }
 
-  if (outputOptions) {
-    args.push(...outputOptions.split(/\s+/).filter((s) => s));
+  if (normalizedOutputOptions) {
+    args.push(...normalizedOutputOptions.split(/\s+/).filter((s) => s));
   }
 
-  if (outputFileName) {
-    args.push(outputFileName);
+  if (normalizedOutputFileName) {
+    args.push(normalizedOutputFileName);
   }
 
   return args;

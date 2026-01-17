@@ -3,14 +3,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/utils/toast";
 import { buildFFmpegArgs } from "@/utils/ffmpeg-command";
 
-interface CommandEditorProps {
+interface CommandModel {
   inputOptions: string;
   inputFileName: string;
   outputOptions: string;
   outputFileName: string;
+}
+
+interface CommandEditorProps {
+  command: CommandModel;
   description?: string;
-  onOutputOptionsChange: (value: string) => void;
-  onOutputFileNameChange: (value: string) => void;
+  onCommandChange: (updates: Partial<CommandModel>) => void;
 }
 
 const StyledInput: React.FC<{
@@ -64,26 +67,37 @@ const SectionCard: React.FC<{
 );
 
 export const CommandEditor: React.FC<CommandEditorProps> = ({
-  inputOptions,
-  inputFileName,
-  outputOptions,
-  outputFileName,
+  command,
   description,
-  onOutputOptionsChange,
-  onOutputFileNameChange,
+  onCommandChange,
 }) => {
+  const { inputOptions, inputFileName, outputOptions, outputFileName } = command;
   const previewRef = useRef<HTMLDivElement>(null);
   const [isCopied, setIsCopied] = useState(false);
 
-  const buildCommand = useCallback(() => {
-    const args = buildFFmpegArgs(
+  const buildArgs = useCallback(() => {
+    return buildFFmpegArgs(
       inputOptions,
       inputFileName,
       outputOptions,
       outputFileName
     );
-    return ['ffmpeg', ...args].join(' ');
   }, [inputOptions, inputFileName, outputOptions, outputFileName]);
+
+  const shellQuote = (arg: string) => {
+    if (!arg) {
+      return '""';
+    }
+    if (/\s/.test(arg) || /["]/.test(arg)) {
+      return `"${arg.replace(/"/g, '\\"')}"`;
+    }
+    return arg;
+  };
+
+  const buildCommand = useCallback(() => {
+    const args = buildArgs();
+    return ['ffmpeg', ...args.map(shellQuote)].join(' ');
+  }, [buildArgs]);
 
   const copyCommand = useCallback(async () => {
     const command = buildCommand();
@@ -115,14 +129,14 @@ export const CommandEditor: React.FC<CommandEditorProps> = ({
             label="File Name"
             value={outputFileName}
             placeholder="output.mp4"
-            onChange={onOutputFileNameChange}
+            onChange={(value) => onCommandChange({ outputFileName: value })}
             icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>}
           />
           <StyledInput
             label="Parameters"
             value={outputOptions}
             placeholder="-c:v libx264"
-            onChange={onOutputOptionsChange}
+            onChange={(value) => onCommandChange({ outputOptions: value })}
             isMono
             icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
           />
@@ -183,11 +197,23 @@ export const CommandEditor: React.FC<CommandEditorProps> = ({
             {' '}
             <span className="text-indigo-300">{inputOptions}</span>
             {' '}
-            <span className="text-white/60">{inputFileName}</span>
+            <span className="text-white/60">
+              {(inputFileName || '')
+                .split('|')
+                .filter((name) => name)
+                .map((name, index, arr) => (
+                  <span key={`${name}-${index}`}>
+                    {shellQuote(name)}
+                    {index < arr.length - 1 ? ' ' : ''}
+                  </span>
+                ))}
+            </span>
             {' '}
             <span className="text-indigo-300">{outputOptions}</span>
             {' '}
-            <span className="text-emerald-300">{outputFileName}</span>
+            <span className="text-emerald-300">
+              {outputFileName ? shellQuote(outputFileName) : ''}
+            </span>
           </div>
 
           {description && (

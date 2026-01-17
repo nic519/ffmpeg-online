@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getFilesType, FileIcon } from "@/utils/file-icons";
 
 interface FileUploadProps {
   onFileChange: (file: File, fileList: File[]) => void;
@@ -73,54 +74,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileChange, selectedFi
 
   const totalSize = useMemo(() => files.reduce((acc, file) => acc + file.size, 0), [files]);
 
-  const getFileIcon = () => {
-    if (files.length === 0) return null;
-
-    const types = new Set(files.map(f => {
-      if (f.type.startsWith('video/')) return 'video';
-      if (f.type.startsWith('audio/')) return 'audio';
-      if (f.type.startsWith('image/')) return 'image';
-      return 'other';
-    }));
-
-    if (types.size > 1) {
-      // Mixed files
-      return (
-        <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-        </svg>
-      );
-    }
-
-    const type = types.values().next().value;
-    switch (type) {
-      case 'video':
-        return (
-          <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
-        );
-      case 'audio':
-        return (
-          <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-          </svg>
-        );
-      case 'image':
-        return (
-          <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        );
-      default:
-        // Generic file
-        return (
-          <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-        );
-    }
-  };
+  const fileType = useMemo(() => getFilesType(files), [files]);
 
   const currentState = files.length > 0 ? "selected" : "empty";
   
@@ -141,7 +95,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileChange, selectedFi
       bg: "bg-indigo-600/20",
       border: "border-indigo-500/30",
       text: "text-indigo-300",
-      icon: getFileIcon(),
+      icon: <FileIcon type={fileType} className="w-10 h-10" />,
       label: `已选择 ${files.length} 个文件`,
       subLabel: `总大小 ${formatSize(totalSize)}`,
     }
