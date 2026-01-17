@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useCallback } from "react";
-import { motion } from "framer-motion";
+import React, { useRef, useCallback, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/utils/toast";
 import { buildFFmpegArgs } from "@/utils/ffmpeg-command";
 
@@ -9,43 +9,57 @@ interface CommandEditorProps {
   outputOptions: string;
   outputFileName: string;
   description?: string;
-  onInputOptionsChange: (value: string) => void;
-  onInputFileNameChange: (value: string) => void;
   onOutputOptionsChange: (value: string) => void;
   onOutputFileNameChange: (value: string) => void;
 }
 
-const GlassInput: React.FC<{
-  label: string;
+const StyledInput: React.FC<{
   value: string;
   placeholder: string;
   onChange: (value: string) => void;
+  label?: string;
+  icon?: React.ReactNode;
+  isMono?: boolean;
+}> = ({ value, placeholder, onChange, label, icon, isMono }) => (
+  <div className="group relative">
+    {label && (
+      <label className="absolute -top-2.5 left-4 px-2 bg-[#0a0a0a] text-[10px] font-bold text-white/40 uppercase tracking-wider z-10 transition-colors group-focus-within:text-indigo-400">
+        {label}
+      </label>
+    )}
+    <div className="relative">
+      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 transition-colors group-focus-within:text-indigo-400">
+        {icon}
+      </div>
+      <input
+        type="text"
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full bg-white/5 hover:bg-white/[0.07] focus:bg-white/10 border border-white/5 focus:border-indigo-500/50 rounded-2xl pl-12 pr-4 py-4 text-sm text-white placeholder-white/20 outline-none transition-all duration-300 ${isMono ? 'font-mono' : ''}`}
+      />
+    </div>
+  </div>
+);
+
+const SectionCard: React.FC<{
+  title: string;
   icon: React.ReactNode;
-}> = ({ label, value, placeholder, onChange, icon }) => (
-  <div className="space-y-2">
-    <label className="flex items-center gap-2 text-white/50 text-xs font-medium uppercase tracking-wider">
-      {icon}
-      {label}
-    </label>
-    <input
-      type="text"
-      value={value}
-      placeholder={placeholder}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full px-4 py-3 rounded-xl font-mono text-sm text-white placeholder-white/20 transition-all duration-300 outline-none"
-      style={{
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-      }}
-      onFocus={(e) => {
-        e.target.style.borderColor = 'rgba(99, 102, 241, 0.5)';
-        e.target.style.boxShadow = '0 0 20px rgba(99, 102, 241, 0.2)';
-      }}
-      onBlur={(e) => {
-        e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-        e.target.style.boxShadow = 'none';
-      }}
-    />
+  color: string;
+  children: React.ReactNode;
+}> = ({ title, icon, color, children }) => (
+  <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-6 relative overflow-hidden group hover:border-white/10 transition-colors duration-500">
+    <div className={`absolute top-0 right-0 w-32 h-32 bg-${color}-500/10 blur-[50px] rounded-full -translate-y-1/2 translate-x-1/2 transition-opacity duration-500 group-hover:opacity-100 opacity-50`} />
+    
+    <div className="flex items-center gap-3 mb-6 relative z-10">
+      <div className={`w-10 h-10 rounded-2xl bg-${color}-500/10 flex items-center justify-center text-${color}-400`}>
+        {icon}
+      </div>
+      <h3 className="text-lg font-bold text-white/90">{title}</h3>
+    </div>
+    <div className="space-y-5 relative z-10">
+      {children}
+    </div>
   </div>
 );
 
@@ -55,14 +69,12 @@ export const CommandEditor: React.FC<CommandEditorProps> = ({
   outputOptions,
   outputFileName,
   description,
-  onInputOptionsChange,
-  onInputFileNameChange,
   onOutputOptionsChange,
   onOutputFileNameChange,
 }) => {
   const previewRef = useRef<HTMLDivElement>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
-  // 构建完整的 ffmpeg 命令
   const buildCommand = useCallback(() => {
     const args = buildFFmpegArgs(
       inputOptions,
@@ -73,156 +85,121 @@ export const CommandEditor: React.FC<CommandEditorProps> = ({
     return ['ffmpeg', ...args].join(' ');
   }, [inputOptions, inputFileName, outputOptions, outputFileName]);
 
-  // 复制命令到剪贴板
   const copyCommand = useCallback(async () => {
     const command = buildCommand();
     try {
       await navigator.clipboard.writeText(command);
-      toast.success('命令已复制到剪贴板');
+      setIsCopied(true);
+      toast.success('Command copied to clipboard');
+      setTimeout(() => setIsCopied(false), 2000);
     } catch {
-      toast.error('复制失败，请重试');
+      toast.error('Failed to copy');
     }
   }, [buildCommand]);
 
-  // 监听键盘快捷键
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // 检查是否按下了 Ctrl+C (Windows/Linux) 或 Cmd+C (Mac)
-      const isCopyShortcut = (e.ctrlKey || e.metaKey) && e.key === 'c';
-      
-      if (isCopyShortcut) {
-        // 检查焦点是否在命令预览区域或其内部
-        const activeElement = document.activeElement;
-        const previewElement = previewRef.current;
-        
-        if (previewElement && (
-          previewElement.contains(activeElement) || 
-          previewElement === activeElement ||
-          // 如果焦点不在任何输入框中，也允许复制
-          (activeElement && activeElement.tagName !== 'INPUT' && activeElement.tagName !== 'TEXTAREA')
-        )) {
-          // 如果焦点在输入框中，不拦截（让浏览器默认行为处理）
-          if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
-            return;
-          }
-          
-          e.preventDefault();
-          copyCommand();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [copyCommand]);
-
   return (
-    <motion.div 
-      className="rounded-2xl p-6 transition-all duration-300"
-      style={{
-        background: 'rgba(255, 255, 255, 0.03)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        backdropFilter: 'blur(20px)',
-      }}
-      whileHover={{ 
-        boxShadow: '0 0 40px rgba(6, 182, 212, 0.15)',
-        borderColor: 'rgba(6, 182, 212, 0.3)',
-      }}
-    >
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-          </svg>
-        </div>
-        <div>
-          <h4 className="text-white font-semibold text-sm">命令配置</h4>
-          <p className="text-white/40 text-xs">设置 FFmpeg 参数</p>
-        </div>
+    <div className="space-y-6">
+      {/* Configuration Area */}
+      <div>
+        {/* Output Section */}
+        <SectionCard
+          title="Output Target"
+          color="fuchsia"
+          icon={
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+          }
+        >
+          <StyledInput
+            label="File Name"
+            value={outputFileName}
+            placeholder="output.mp4"
+            onChange={onOutputFileNameChange}
+            icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>}
+          />
+          <StyledInput
+            label="Parameters"
+            value={outputOptions}
+            placeholder="-c:v libx264"
+            onChange={onOutputOptionsChange}
+            isMono
+            icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
+          />
+        </SectionCard>
       </div>
-      
-      {description && (
-        <div className="mb-4 text-xs text-white/60 leading-relaxed flex items-start gap-2">
-          <svg className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p>{description}</p>
-        </div>
-      )}
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <GlassInput
-          label="输入选项"
-          value={inputOptions}
-          placeholder="-i"
-          onChange={onInputOptionsChange}
-          icon={<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>}
-        />
-        <GlassInput
-          label="输入文件"
-          value={inputFileName}
-          placeholder="input.mp4"
-          onChange={onInputFileNameChange}
-          icon={<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
-        />
-        <GlassInput
-          label="输出选项"
-          value={outputOptions}
-          placeholder="-c:v libx264"
-          onChange={onOutputOptionsChange}
-          icon={<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>}
-        />
-        <GlassInput
-          label="输出文件"
-          value={outputFileName}
-          placeholder="output.mp4"
-          onChange={onOutputFileNameChange}
-          icon={<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>}
-        />
-      </div>
-      
-      {/* 命令预览 */}
-      <div 
-        ref={previewRef}
-        className="rounded-xl p-4 font-mono text-sm overflow-x-auto cursor-pointer group"
-        style={{
-          background: 'rgba(0, 0, 0, 0.3)',
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-        }}
-        onClick={copyCommand}
-        title="点击复制或按 Ctrl+C (Mac: Cmd+C)"
-      >
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1.5">
-              <div className="w-3 h-3 rounded-full bg-red-500/60" />
-              <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-              <div className="w-3 h-3 rounded-full bg-green-500/60" />
+
+      {/* Description & Preview */}
+      <div className="relative group">
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 blur-xl opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
+        <div 
+          className="relative bg-black/40 border border-white/10 rounded-3xl p-6 backdrop-blur-xl overflow-hidden cursor-pointer"
+          onClick={copyCommand}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="flex gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
+                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500/40" />
+              </div>
+              <span className="text-xs font-medium text-white/30 uppercase tracking-wider">Generated Command</span>
             </div>
-            <span className="text-white/30 text-xs">命令预览</span>
+            
+            <AnimatePresence mode="wait">
+              {isCopied ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="flex items-center gap-1.5 text-emerald-400"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-xs font-bold">Copied!</span>
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                >
+                  <span className="text-xs text-white/30">Click to copy</span>
+                  <svg className="w-4 h-4 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                copyCommand();
-              }}
-              className="text-white/40 hover:text-white/80 text-xs px-2 py-1 rounded hover:bg-white/5 transition-colors"
-            >
-              <svg className="w-3.5 h-3.5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+
+          <div 
+            ref={previewRef}
+            className="font-mono text-sm text-white/80 leading-relaxed break-all selection:bg-indigo-500/30"
+          >
+            <span className="text-fuchsia-400">ffmpeg</span>
+            {' '}
+            <span className="text-indigo-300">{inputOptions}</span>
+            {' '}
+            <span className="text-white/60">{inputFileName}</span>
+            {' '}
+            <span className="text-indigo-300">{outputOptions}</span>
+            {' '}
+            <span className="text-emerald-300">{outputFileName}</span>
+          </div>
+
+          {description && (
+            <div className="mt-4 pt-4 border-t border-white/5 flex items-start gap-2 text-xs text-white/40">
+              <svg className="w-4 h-4 shrink-0 text-indigo-400/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              复制
-            </button>
-            <span className="text-white/20 text-xs">Ctrl+C</span>
-          </div>
+              <p>{description}</p>
+            </div>
+          )}
         </div>
-        <code className="text-white/80 break-all leading-relaxed select-all">
-          {buildCommand()}
-        </code>
       </div>
-    </motion.div>
+    </div>
   );
 };

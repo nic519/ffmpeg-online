@@ -62,7 +62,7 @@ const App = () => {
 
   const handleReset = () => {
     console.warn("[App] handleReset");
-    setCurrentFile(null);
+    setCurrentFile(undefined);
     setFileList([]);
     reset(); // 清除下载链接等状态
   };
@@ -158,12 +158,6 @@ const App = () => {
                 outputOptions={commandState.outputOptions}
                 outputFileName={commandState.outputFileName}
                 description={selectedTemplate?.description}
-                onInputOptionsChange={(value) =>
-                  updateCommandState({ inputOptions: value })
-                }
-                onInputFileNameChange={(value) =>
-                  updateCommandState({ inputFileName: value })
-                }
                 onOutputOptionsChange={(value) =>
                   updateCommandState({ outputOptions: value })
                 }
