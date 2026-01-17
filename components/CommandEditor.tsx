@@ -8,6 +8,7 @@ interface CommandEditorProps {
   inputFileName: string;
   outputOptions: string;
   outputFileName: string;
+  description?: string;
   onInputOptionsChange: (value: string) => void;
   onInputFileNameChange: (value: string) => void;
   onOutputOptionsChange: (value: string) => void;
@@ -53,6 +54,7 @@ export const CommandEditor: React.FC<CommandEditorProps> = ({
   inputFileName,
   outputOptions,
   outputFileName,
+  description,
   onInputOptionsChange,
   onInputFileNameChange,
   onOutputOptionsChange,
@@ -140,6 +142,15 @@ export const CommandEditor: React.FC<CommandEditorProps> = ({
           <p className="text-white/40 text-xs">设置 FFmpeg 参数</p>
         </div>
       </div>
+      
+      {description && (
+        <div className="mb-4 text-xs text-white/60 leading-relaxed flex items-start gap-2">
+          <svg className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p>{description}</p>
+        </div>
+      )}
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <GlassInput

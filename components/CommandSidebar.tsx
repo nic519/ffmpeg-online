@@ -51,7 +51,9 @@ export const CommandSidebar: React.FC<CommandSidebarProps> = ({
 
       {/* 模板列表 */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6 command-sidebar">
-        {Object.entries(commandGroups).map(([category, templates]) => (
+        {Object.entries(commandGroups)
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .map(([category, templates]) => (
           <div key={category}>
             <div className="flex items-center gap-2 mb-3 px-2">
               <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-indigo-400 to-purple-400" />
@@ -60,7 +62,7 @@ export const CommandSidebar: React.FC<CommandSidebarProps> = ({
               </h4>
             </div>
             <div className="space-y-1.5">
-              {templates.map((template, index) => (
+              {templates.slice(0, 1).map((template, index) => (
                 <motion.button
                   key={template.id}
                   onClick={() => onSelectTemplate(template)}
@@ -94,9 +96,6 @@ export const CommandSidebar: React.FC<CommandSidebarProps> = ({
                       </span>
                     )}
                   </div>
-                  <p className="text-white/30 text-xs mt-1 line-clamp-2">
-                    {template.description}
-                  </p>
                 </motion.button>
               ))}
             </div>

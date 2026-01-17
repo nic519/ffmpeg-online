@@ -159,10 +159,17 @@ export const useCommandExecution = (ffmpeg: FFmpeg | null) => {
     }
   };
 
+  const reset = () => {
+    setOutputFiles([]);
+    setHref("");
+    setDownloadFileName("");
+  };
+
   return {
     outputFiles,
     href,
     downloadFileName,
     executeCommand,
+    reset,
   };
 };

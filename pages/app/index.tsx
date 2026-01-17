@@ -1,13 +1,12 @@
 import { useEffect } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import qs from "query-string";
-import { Spinner } from "@heroui/react";
 import { motion } from "framer-motion";
 import { CommandSidebar } from "../../components/CommandSidebar";
 import { FileUpload } from "../../components/FileUpload";
 import { CommandEditor } from "../../components/CommandEditor";
 import { ExecutionSection } from "../../components/ExecutionSection";
-import { OutputFilesSection } from "../../components/OutputFilesSection";
+// import { OutputFilesSection } from "../../components/OutputFilesSection";
 import { useFFmpegContext } from "@/contexts/FFmpegContext";
 import { useCommandContext } from "@/contexts/CommandContext";
 import { useCommandExecution } from "../../hooks/useCommandExecution";
@@ -31,19 +30,25 @@ const App = () => {
   } = useCommandContext();
 
   // 命令执行
-  const { href, downloadFileName, executeCommand } = useCommandExecution(ffmpeg);
+  const { href, downloadFileName, executeCommand, reset } = useCommandExecution(ffmpeg);
 
-  // 文件上传处理
+  const isInitializing = spinning && tip === "ffmpeg static resource loading...";
+
   const handleFileChange = (file: File, fileList: File[]) => {
+    console.warn("[App] handleFileChange: first =", file?.name, "count =", fileList.length);
     setCurrentFile(file);
     setFileList(fileList);
   };
 
-  // 执行命令
   const handleExecute = () => {
     if (!currentFile || !ffmpeg) {
+      console.warn("[App] handleExecute blocked: currentFile or ffmpeg missing", {
+        hasFile: Boolean(currentFile),
+        hasFFmpeg: Boolean(ffmpeg),
+      });
       return;
     }
+    console.warn("[App] handleExecute: files =", fileList.map((f) => f.name));
     executeCommand(
       fileList,
       commandState.inputOptions,
@@ -53,6 +58,13 @@ const App = () => {
       setSpinning,
       setTip
     );
+  };
+
+  const handleReset = () => {
+    console.warn("[App] handleReset");
+    setCurrentFile(null);
+    setFileList([]);
+    reset(); // 清除下载链接等状态
   };
 
   // URL 参数同步
@@ -83,35 +95,16 @@ const App = () => {
     });
   }, [commandState.inputOptions, commandState.outputOptions, commandState.outputFileName]);
 
+  const isProcessing = spinning && !isInitializing && Boolean(currentFile);
+  const processTip =
+    isProcessing && typeof tip === "string" && tip !== "ffmpeg static resource loading..."
+      ? tip
+      : false;
+
   return (
     <div className="min-h-screen flex relative overflow-hidden">
       {/* 静态背景 */}
       <Background />
-      
-      {/* FFmpeg 初始化 Loading 状态（仅在首次加载时显示） */}
-      {spinning && (tip === "ffmpeg static resource loading..." || !currentFile) && (
-        <motion.div 
-          className="fixed inset-0 z-50 flex items-center justify-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          style={{ background: 'rgba(0, 0, 0, 0.8)', backdropFilter: 'blur(8px)' }}
-        >
-          <motion.div 
-            className="flex flex-col items-center gap-6 p-10 rounded-3xl"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            style={{
-              background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-            }}
-          >
-            <Spinner size="lg" color="primary" />
-            {tip && (
-              <p className="text-white/80 font-medium tracking-wide">{tip}</p>
-            )}
-          </motion.div>
-        </motion.div>
-      )}
 
       {/* 侧边栏 */}
       <div className="fixed left-0 top-0 h-screen z-20">
@@ -136,14 +129,20 @@ const App = () => {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="grid grid-cols-1 lg:grid-cols-2 gap-6"
             >
-              <FileUpload onFileChange={handleFileChange} />
+              <FileUpload 
+                onFileChange={handleFileChange} 
+                selectedFile={currentFile}
+                onReset={handleReset}
+              />
               <ExecutionSection
                 hasFile={Boolean(currentFile)}
                 onExecute={handleExecute}
                 downloadHref={href}
                 downloadFileName={downloadFileName}
-                isProcessing={spinning && tip !== "ffmpeg static resource loading..." && Boolean(currentFile)}
-                processTip={tip !== "ffmpeg static resource loading..." && Boolean(currentFile) ? tip : false}
+                isProcessing={isProcessing}
+                processTip={processTip}
+                isInitializing={isInitializing}
+                initializingTip={isInitializing ? tip : false}
               />
             </motion.div>
 
@@ -158,6 +157,7 @@ const App = () => {
                 inputFileName={commandState.inputFileName}
                 outputOptions={commandState.outputOptions}
                 outputFileName={commandState.outputFileName}
+                description={selectedTemplate?.description}
                 onInputOptionsChange={(value) =>
                   updateCommandState({ inputOptions: value })
                 }

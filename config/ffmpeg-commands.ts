@@ -29,14 +29,14 @@ export const FFMPEG_COMMAND_TEMPLATES: FFmpegCommandTemplate[] = [
   {
     id: 'convert-to-mp4',
     description: '将视频转换为 MP4 格式',
-    category: '视频转换',
+    category: '视频-转换',
     outputOptions: '-c:v libx264 -c:a aac',
     outputExtension: '.mp4',
   },
   {
     id: 'compress-video',
     description: '压缩视频文件大小。通过降低码率来减小文件大小，可调整 -crf 值（18-28，数值越大压缩率越高）',
-    category: '视频转换',
+    category: '视频-转换',
     outputOptions: '-c:v libx264 -crf 28 -c:a aac -b:a 128k',
     outputExtension: '.mp4',
   },
