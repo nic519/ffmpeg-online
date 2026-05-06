@@ -107,12 +107,26 @@ export function buildFFmpegCommand(
   }
 
   const baseName = files[0].name.replace(/\.[^/.]+$/, '');
-  const outputFileName = `${baseName}${template.outputExtension}`;
+  const inputExt = files[0].name.toLowerCase().split('.').pop() || '';
+
+  let outputOptions = template.outputOptions;
+  let outputExtension = template.outputExtension;
+
+  if (template.adaptiveOutput) {
+    const mkvLikeExts = ['mkv', 'webm'];
+    const isMkvLike = mkvLikeExts.includes(inputExt);
+    if (isMkvLike) {
+      outputOptions = outputOptions.replace(/-c:s mov_text/, '-c:s srt');
+      outputExtension = outputExtension.replace('.mp4', `.${inputExt}`);
+    }
+  }
+
+  const outputFileName = `${baseName}${outputExtension}`;
 
   return {
     inputOptions,
     inputFiles,
-    outputOptions: template.outputOptions,
+    outputOptions,
     outputFileName,
   };
 }

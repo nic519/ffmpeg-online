@@ -6,6 +6,7 @@ export interface FFmpegCommandTemplate {
   outputExtension: string; // 输出文件扩展名
   inputFileCount?: number; // 默认1，只有>1时才写
   inputOptions?: string; // 默认"-i"，只有特殊情况下才写
+  adaptiveOutput?: boolean; // 根据输入文件容器格式自适应调整字幕编码和输出扩展名
 }
 
 export const FFMPEG_COMMAND_TEMPLATES: FFmpegCommandTemplate[] = [
@@ -44,19 +45,21 @@ export const FFMPEG_COMMAND_TEMPLATES: FFmpegCommandTemplate[] = [
   // 字幕处理类（多文件场景）
   {
     id: 'merge-subtitle-srt',
-    description: '将 SRT 字幕文件合并到视频中。第一个文件为视频，第二个文件为 SRT 字幕',
+    description: '将 SRT 字幕文件合并到视频中。自动识别视频容器格式（MP4 用 mov_text，MKV 用 srt）。第一个文件为视频，第二个文件为 SRT 字幕',
     category: 'SUBTITLE',
     inputFileCount: 2,
-    outputOptions: '-c:v copy -c:a copy -c:s mov_text',
+    outputOptions: '-map 0:v -map 0:a -map 1:s -c:v copy -c:a copy -c:s mov_text',
     outputExtension: '-sub.mp4',
+    adaptiveOutput: true,
   },
   {
     id: 'merge-subtitle-ass',
-    description: '将 ASS 字幕文件合并到视频中。第一个文件为视频，第二个文件为 ASS 字幕',
+    description: '将 ASS 字幕文件合并到视频中。自动识别视频容器格式（MP4 用 mov_text，MKV/WebM 用 ass）。第一个文件为视频，第二个文件为 ASS 字幕',
     category: 'SUBTITLE',
     inputFileCount: 2,
-    outputOptions: '-c:v copy -c:a copy -c:s ass',
+    outputOptions: '-map 0:v -map 0:a -map 1:s -c:v copy -c:a copy -c:s ass',
     outputExtension: '-sub.mp4',
+    adaptiveOutput: true,
   }, 
 
   // 视频处理类
